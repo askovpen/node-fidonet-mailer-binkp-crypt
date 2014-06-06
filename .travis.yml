@@ -3,5 +3,6 @@ node_js:
   - "0.10"
 before_script:
   - "npm install -g gulp"
+  - sudo apt-get install libgmp-dev -qq > apt-get.out 2>&1 || (cat apt-get.out && exit 1)
 script:
   - gulp
