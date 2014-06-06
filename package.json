@@ -12,6 +12,7 @@
 		"gulp-replace": ">0.0.0",
 		"gulp-jshint": ">0.0.0",
 		"gulp-rename": ">0.0.0",
+		"gulp-mocha": ">0.0.0",
 		"jshint-stylish": ">0.0.0",
 		"bigint": ">0.0.0"
 	},

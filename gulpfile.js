@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var replace = require('gulp-replace');
 var jshint = require('gulp-jshint');
 var rename = require('gulp-rename');
+var mocha = require('gulp-mocha');
 var exec = require('child_process').exec;
 var js=['./package.json',
 	'./gulpfile.js',
@@ -30,4 +31,9 @@ gulp.task('lint',['copy'], function() {
 		.pipe(jshint.reporter('jshint-stylish'))
 		.pipe(jshint.reporter('fail'))
 });
-gulp.task('default', ['lint']);
+gulp.task('test',['lint'], function() {
+	gulp.src('test/test.js')
+		.pipe(mocha({timeout:'60s',reporter:'spec'}));
+});
+
+gulp.task('default', ['test']);
