@@ -1,5 +1,5 @@
 var bigint=require('bigint');
-var bn=require('./bignumber.js');
+//var bn=require('./bignumber.js');
 var crypt=function(password) {
 	if (!(this instanceof crypt)) return new crypt(password);
 	this.password=password;
