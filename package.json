@@ -1,0 +1,26 @@
+{
+	"name": "fidonet-mailer-binkp-crypt",
+	"main": "fidonet-mailer-binkp-crypt.js",
+	"version": "0.0.1",
+	"description": "Fidonet Binkp crypt module",
+	"keywords": ["Fidonet", "Fido", "mailer", "binkp", "client", "crypt"],
+	"author": { "name": "Alexander N. Skovpen" },
+	"dependencies": {
+	},
+	"devDependencies": {
+		"gulp": ">0.0.0",
+		"gulp-replace": ">0.0.0",
+		"gulp-jshint": ">0.0.0",
+		"gulp-rename": ">0.0.0",
+		"jshint-stylish": ">0.0.0",
+		"bigint": ">0.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/askovpen/node-fidonet-mailer-binkp-crypt.git"
+	},
+	"scripts": {
+		"pretest": "jshint fidonet-mailer-binkp-crypt.js test/test.js",
+		"test": "mocha --reporter spec --timeout 60s"
+	}
+}
