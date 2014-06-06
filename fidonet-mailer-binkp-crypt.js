@@ -1,5 +1,5 @@
 var bigint=require('bigint');
-
+var bn=require('./bignumber.js');
 var crypt=function(password) {
 	if (!(this instanceof crypt)) return new crypt(password);
 	this.password=password;
@@ -81,6 +81,7 @@ crypt.prototype.init_keys=function(){
 crypt.prototype.update_keys=function(c){
 	this.keys[0]=this.crc32(this.keys[0],c);
 	this.keys[1]=bigint(this.keys[1]).add(this.keys[0]&0xff).mul(0x08088405).add(1).and(0xffffffff).toNumber();
+//	this.keys[1]=parseInt(new bn(this.keys[1]+(this.keys[0]&0xff)).times(0x08088405).plus(1).toString(16).substr(-8),16);
 	this.keys[2] = this.crc32(this.keys[2], this.keys[1] >>> 24);
 	return c;
 };
@@ -91,7 +92,7 @@ crypt.prototype.decrypt_byte=function(b) {
 };
 crypt.prototype.decrypt_buf=function(buf) {
 	var nbuf=new Buffer(buf.length);
-	for (var i=0;i<buf.length;i++){
+	for (var i=0, len=buf.length;i<len;i++){
 		nbuf[i]=buf[i] ^ this.decrypt_byte(buf[i]);
 		this.update_keys(nbuf[i]);
 	}
@@ -99,7 +100,7 @@ crypt.prototype.decrypt_buf=function(buf) {
 };
 crypt.prototype.encrypt_buf=function(buf) {
 	var nbuf=new Buffer(buf.length);
-	for (var i=0;i<buf.length;i++){
+	for (var i=0, len=buf.length;i<len;i++){
 		nbuf[i]=buf[i]^this.decrypt_byte(buf[i]);
 		this.update_keys(buf[i]);
 	}
