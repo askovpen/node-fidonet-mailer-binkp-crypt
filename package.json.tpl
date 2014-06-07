@@ -6,7 +6,6 @@
 	"keywords": ["Fidonet", "Fido", "mailer","binkp"],
 	"author": { "name": "Alexander N. Skovpen" },
 	"dependencies": {
-		"bigint":">0.0.0"
 	},
 	"devDependencies": {
 	},
@@ -15,6 +14,7 @@
 		"url": "https://github.com/askovpen/node-fidonet-mailer-binkp-crypt.git"
 	},
 	"scripts": {
-		"pretest": "jshint fidonet-mailer-binkp-crypt.js"
+		"pretest": "jshint fidonet-mailer-binkp-crypt.js",
+		"install": "node-gyp configure build"
 	}
 }
