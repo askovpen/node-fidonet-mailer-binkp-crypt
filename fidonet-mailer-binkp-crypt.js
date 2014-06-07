@@ -9,10 +9,10 @@ crypt.prototype.init_keys=function(){
 	this.crypt.init_keys(this.password);
 };
 crypt.prototype.decrypt_buf=function(buf) {
-	return this.crypt.decrypt_buf(buf.toString('binary'));
+	return this.crypt.decrypt_buf(buf);
 };
 crypt.prototype.encrypt_buf=function(buf) {
-	return this.crypt.encrypt_buf(buf.toString('binary'));
+	return this.crypt.encrypt_buf(buf);
 };
 
 module.exports=crypt;

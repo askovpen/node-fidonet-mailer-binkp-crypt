@@ -89,7 +89,7 @@ void BinkpCrypt::Init(Handle<Object> exports) {
 Handle<Value> BinkpCrypt::New(const Arguments& args) {
 	HandleScope scope;
 	if(!args.IsConstructCall()) {
-		cout<<"123"<<endl;
+//		cout<<"123"<<endl;
 		int len = args.Length();
 		Handle<Value>* newArgs = new Handle<Value>[len];
 		for(int i = 0; i < len; i++) {
@@ -142,28 +142,28 @@ void BinkpCrypt::decrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt* obj)
 void BinkpCrypt::encrypt_buf(char *buf, unsigned int bufsize,BinkpCrypt* obj)
 {
 	int t;
+//	cout <<buf<<endl;
 	while( bufsize-- ) {
 		t = decrypt_byte(obj);
 		update_keys( *buf ,obj);
 		*buf++ ^= t;
 	}
 }
-
 Handle<Value> BinkpCrypt::nencrypt_buf (const Arguments& args) {
 	HandleScope scope;
-	String::AsciiValue abuf(args[0]->ToString());
-	char *buf=*abuf;
+	int len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
-	encrypt_buf (buf,abuf.length(),obj);
-	return scope.Close(Buffer::New(buf,abuf.length())->handle_);
+	char *buf=Buffer::Data(args[0]->ToObject());
+	encrypt_buf (buf,len,obj);
+	return scope.Close(Buffer::New(buf,len)->handle_);
 }
 Handle<Value> BinkpCrypt::ndecrypt_buf (const Arguments& args) {
 	HandleScope scope;
+	int len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
-	String::AsciiValue abuf(args[0]->ToString());
-	char *buf=*abuf;
-	decrypt_buf (buf,abuf.length(),obj);
-	return scope.Close(Buffer::New(buf,abuf.length())->handle_);
+	char *buf=Buffer::Data(args[0]->ToObject());
+	decrypt_buf (buf,len,obj);
+	return scope.Close(Buffer::New(buf,len)->handle_);
 }
 void InitAll(Handle<Object> exports) {
   BinkpCrypt::Init(exports);
