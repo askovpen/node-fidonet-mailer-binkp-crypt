@@ -11,20 +11,22 @@ class BinkpCrypt : ObjectWrap {
 		static void Init(v8::Handle<v8::Object> exports);
 		static Persistent<Function> js_conditioner;
 		BinkpCrypt();
-		static unsigned long keys[3];
 		static unsigned long crc32_tab[256];
 	protected:
+		unsigned long keys[3];
 		static Handle<Value> init_keys (const Arguments& args);
+//		void init_keys (char* passwd);
 		static Handle<Value> ndecrypt_buf (const Arguments& args);
 		static Handle<Value> nencrypt_buf (const Arguments& args);
 		static Persistent<FunctionTemplate> constructor_template;
 		static Handle<Value> New(const Arguments& args);
 	private:
 		static v8::Persistent<v8::Function> constructor;
-		static int decrypt_byte();
-		static void decrypt_buf (char *buf, unsigned int bufsize);
-		static void encrypt_buf (char *buf, unsigned int bufsize);
-		static int update_keys(int c);
+		static int decrypt_byte(BinkpCrypt *obj);
+		static void decrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt *obj);
+		static void encrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt *obj);
+		static int update_keys(int c,BinkpCrypt *obj);
+		static char* test;
 };
 unsigned long BinkpCrypt::crc32_tab[] =
 {
@@ -62,7 +64,7 @@ unsigned long BinkpCrypt::crc32_tab[] =
   0xb3667a2e,0xc4614ab8,0x5d681b02,0x2a6f2b94,0xb40bbe37,0xc30c8ea1,0x5a05df1b,0x2d02ef8d
 };
 
-unsigned long BinkpCrypt::keys[]={0};
+//unsigned long BinkpCrypt::keys[]={0};
 Persistent<Function> BinkpCrypt::constructor;
 Persistent<FunctionTemplate> BinkpCrypt::constructor_template;
 
@@ -85,7 +87,9 @@ void BinkpCrypt::Init(Handle<Object> exports) {
 	exports->Set(String::NewSymbol("BinkpCrypt"), constructor);
 }
 Handle<Value> BinkpCrypt::New(const Arguments& args) {
+	HandleScope scope;
 	if(!args.IsConstructCall()) {
+		cout<<"123"<<endl;
 		int len = args.Length();
 		Handle<Value>* newArgs = new Handle<Value>[len];
 		for(int i = 0; i < len; i++) {
@@ -95,7 +99,6 @@ Handle<Value> BinkpCrypt::New(const Arguments& args) {
 		delete[] newArgs;
 		return newInst;
 	}
-	HandleScope scope;
 	BinkpCrypt *bcrypt;
 	bcrypt=new BinkpCrypt();
 	bcrypt->Wrap(args.This());
@@ -105,42 +108,43 @@ Handle<Value> BinkpCrypt::init_keys (const Arguments& args) {
 	HandleScope scope;
 	String::AsciiValue pass(args[0]->ToString());
 	char *password=*pass;
-	keys[0] = 305419896L;
-	keys[1] = 591751049L;
-	keys[2] = 878082192L;
+	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
+	obj->keys[0] = 305419896L;
+	obj->keys[1] = 591751049L;
+	obj->keys[2] = 878082192L;
 	while (*password)
 	{
-		update_keys((int)*password);
+		update_keys((int)*password,obj);
 		password++;
 	}
 	return scope.Close(args.This());
 }
-int BinkpCrypt::update_keys(int c)
+int BinkpCrypt::update_keys(int c,BinkpCrypt *obj)
 {
 	int keyshift;
-	keys[0] = CRC32_CR( keys[0], c );
-	keys[1] += keys[0] & 0xff;
-	keys[1] = keys[1] * 134775813L + 1;
-	keyshift = (int) ( keys[1] >> 24 );
-	keys[2] = CRC32_CR( keys[2], keyshift );
+	obj->keys[0] = CRC32_CR( obj->keys[0], c );
+	obj->keys[1] += obj->keys[0] & 0xff;
+	obj->keys[1] = obj->keys[1] * 134775813L + 1;
+	keyshift = (int) ( obj->keys[1] >> 24 );
+	obj->keys[2] = CRC32_CR( obj->keys[2], keyshift );
 	return c;
 }
-int BinkpCrypt::decrypt_byte (){
+int BinkpCrypt::decrypt_byte (BinkpCrypt* obj){
 	unsigned temp;
-	temp = ((unsigned)keys[2] & 0xffff) | 2;
+	temp = ((unsigned)obj->keys[2] & 0xffff) | 2;
 	return (int)(((temp * (temp ^ 1)) >> 8) & 0xff);
 }
-void BinkpCrypt::decrypt_buf (char *buf, unsigned int bufsize)
+void BinkpCrypt::decrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt* obj)
 {
   while (bufsize--)
-      update_keys(*buf++ ^= decrypt_byte());
+      update_keys(*buf++ ^= decrypt_byte(obj),obj);
 }
-void BinkpCrypt::encrypt_buf(char *buf, unsigned int bufsize)
+void BinkpCrypt::encrypt_buf(char *buf, unsigned int bufsize,BinkpCrypt* obj)
 {
 	int t;
 	while( bufsize-- ) {
-		t = decrypt_byte();
-		update_keys( *buf );
+		t = decrypt_byte(obj);
+		update_keys( *buf ,obj);
 		*buf++ ^= t;
 	}
 }
@@ -149,14 +153,16 @@ Handle<Value> BinkpCrypt::nencrypt_buf (const Arguments& args) {
 	HandleScope scope;
 	String::AsciiValue abuf(args[0]->ToString());
 	char *buf=*abuf;
-	encrypt_buf (buf,abuf.length());
+	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
+	encrypt_buf (buf,abuf.length(),obj);
 	return scope.Close(Buffer::New(buf,abuf.length())->handle_);
 }
 Handle<Value> BinkpCrypt::ndecrypt_buf (const Arguments& args) {
 	HandleScope scope;
+	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	String::AsciiValue abuf(args[0]->ToString());
 	char *buf=*abuf;
-	decrypt_buf (buf,abuf.length());
+	decrypt_buf (buf,abuf.length(),obj);
 	return scope.Close(Buffer::New(buf,abuf.length())->handle_);
 }
 void InitAll(Handle<Object> exports) {
