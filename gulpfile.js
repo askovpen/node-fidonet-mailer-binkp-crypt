@@ -23,7 +23,7 @@ gulp.task('replace',['version'], function() {
 		.pipe(gulp.dest('./dist/'));
 });
 gulp.task('copy',['replace'], function() {
-	gulp.src(['fidonet-mailer-binkp-crypt.js','README.md','LICENSE'])
+	gulp.src(['fidonet-mailer-binkp-crypt.js','README.md','LICENSE','crypt.cc','binding.gyp'])
 	.pipe(gulp.dest('./dist/'));
 });
 gulp.task('lint',['copy'], function() {
