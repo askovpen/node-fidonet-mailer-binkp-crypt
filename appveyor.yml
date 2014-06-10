@@ -2,13 +2,15 @@ version: "{build}"
 environment:
   matrix:
     - nodejs_version: "0.10"
-
+  allow_failures:
+    - nodejs_version: "0.11"
 build: OFF
 
 install:
+  - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
+  - node --version
+  - npm --version
   - npm install gulp -g
   - npm install
 test_script:
-  - node --version
-  - npm --version
   - gulp
