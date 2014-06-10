@@ -6,7 +6,7 @@ using namespace v8;
 using namespace node;
 using namespace std;
 #define CRC32_CR(c,b)	(crc32_tab[((int)(c) ^ (b)) & 0xff] ^ ((c) >> 8))
-class BinkpCrypt : ObjectWrap { 
+class BinkpCrypt : node::ObjectWrap { 
 	public:
 		static void Init(v8::Handle<v8::Object> exports);
 		static Persistent<Function> js_conditioner;
@@ -14,12 +14,12 @@ class BinkpCrypt : ObjectWrap {
 		static unsigned long crc32_tab[256];
 	protected:
 		unsigned long keys[3];
-		static Handle<Value> init_keys (const Arguments& args);
+		static v8::Handle<v8::Value> init_keys (const v8::Arguments& args);
 //		void init_keys (char* passwd);
-		static Handle<Value> ndecrypt_buf (const Arguments& args);
-		static Handle<Value> nencrypt_buf (const Arguments& args);
-		static Persistent<FunctionTemplate> constructor_template;
-		static Handle<Value> New(const Arguments& args);
+		static v8::Handle<v8::Value> ndecrypt_buf (const v8::Arguments& args);
+		static v8::Handle<v8::Value> nencrypt_buf (const v8::Arguments& args);
+		static v8::Persistent<FunctionTemplate> constructor_template;
+		static v8::Handle<v8::Value> New(const v8::Arguments& args);
 	private:
 		static v8::Persistent<v8::Function> constructor;
 		static int decrypt_byte(BinkpCrypt *obj);
