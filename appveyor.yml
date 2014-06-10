@@ -5,6 +5,8 @@ environment:
 build: OFF
 platform:
   - x86
+configuration:
+  - Release
 install:
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
   - node --version
