@@ -1,0 +1,14 @@
+version: "{build}"
+environment:
+  matrix:
+    - nodejs_version: "0.10"
+
+build: OFF
+
+install:
+  - npm install gulp -g
+  - npm install
+test_script:
+  - node --version
+  - npm --version
+  - gulp
