@@ -117,6 +117,7 @@ Handle<Value> BinkpCrypt::init_keys (const Arguments& args) {
 		update_keys((int)*password,obj);
 		password++;
 	}
+//	cout <<obj->keys[0];
 	return scope.Close(args.This());
 }
 int BinkpCrypt::update_keys(int c,BinkpCrypt *obj)
@@ -151,7 +152,7 @@ void BinkpCrypt::encrypt_buf(char *buf, unsigned int bufsize,BinkpCrypt* obj)
 }
 Handle<Value> BinkpCrypt::nencrypt_buf (const Arguments& args) {
 	HandleScope scope;
-	int len=Buffer::Length(args[0]->ToObject());
+	unsigned int len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	char *buf=Buffer::Data(args[0]->ToObject());
 	encrypt_buf (buf,len,obj);
@@ -159,7 +160,7 @@ Handle<Value> BinkpCrypt::nencrypt_buf (const Arguments& args) {
 }
 Handle<Value> BinkpCrypt::ndecrypt_buf (const Arguments& args) {
 	HandleScope scope;
-	int len=Buffer::Length(args[0]->ToObject());
+	unsigned int len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	char *buf=Buffer::Data(args[0]->ToObject());
 	decrypt_buf (buf,len,obj);
