@@ -3,6 +3,7 @@ node-fidonet-mailer-binkp-crypt
 
 [![Build Status](https://travis-ci.org/askovpen/node-fidonet-mailer-binkp-crypt.svg?branch=master)](https://travis-ci.org/askovpen/node-fidonet-mailer-binkp-crypt)
 [![Build status](https://ci.appveyor.com/api/projects/status/c3l0au95nkaohx1h)](https://ci.appveyor.com/project/askovpen/node-fidonet-mailer-binkp-crypt)
+[![Coverage Status](https://coveralls.io/repos/askovpen/node-fidonet-mailer-binkp-crypt/badge.png?branch=master)](https://coveralls.io/r/askovpen/node-fidonet-mailer-binkp-crypt?branch=master)
 
 [![(npm package version)](https://nodei.co/npm/fidonet-mailer-binkp-crypt.png?downloads=true)](https://npmjs.org/package/fidonet-mailer-binkp-crypt)
 
