@@ -8,7 +8,7 @@ using namespace v8;
 using namespace node;
 using namespace std;
 #define CRC32_CR(c,b)	(crc32_tab[((int)(c) ^ (b)) & 0xff] ^ ((c) >> 8))
-class BinkpCrypt : node::ObjectWrap { 
+class BinkpCrypt : public node::ObjectWrap { 
 	public:
 		static void Init(v8::Handle<v8::Object> exports);
 		static Persistent<Function> js_conditioner;
