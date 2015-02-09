@@ -8,12 +8,8 @@
 	"dependencies": {
 	},
 	"devDependencies": {
-		"gulp": ">0.0.0",
-		"gulp-replace": ">0.0.0",
-		"gulp-jshint": ">0.0.0",
-		"gulp-rename": ">0.0.0",
-		"gulp-mocha": ">0.0.0",
-		"jshint-stylish": ">0.0.0"
+		"jshint": "^2.6.0",
+		"mocha": "^2.1.0"
 	},
 	"repository": {
 		"type": "git",
