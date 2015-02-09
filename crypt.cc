@@ -2,6 +2,7 @@
 #include <node_buffer.h>
 #include <iostream>
 #include <node_object_wrap.h>
+#include <nan.h>
 
 using namespace v8;
 using namespace node;
@@ -15,12 +16,11 @@ class BinkpCrypt : node::ObjectWrap {
 		static unsigned long crc32_tab[256];
 	protected:
 		unsigned long keys[3];
-		static v8::Handle<v8::Value> init_keys (const v8::Arguments& args);
-//		void init_keys (char* passwd);
-		static v8::Handle<v8::Value> ndecrypt_buf (const v8::Arguments& args);
-		static v8::Handle<v8::Value> nencrypt_buf (const v8::Arguments& args);
+		static NAN_METHOD(New);
+		static NAN_METHOD(init_keys);
+		static NAN_METHOD(ndecrypt_buf);
+		static NAN_METHOD(nencrypt_buf);
 		static v8::Persistent<FunctionTemplate> constructor_template;
-		static v8::Handle<v8::Value> New(const v8::Arguments& args);
 	private:
 		static v8::Persistent<v8::Function> constructor;
 		static int decrypt_byte(BinkpCrypt *obj);
@@ -65,49 +65,42 @@ unsigned long BinkpCrypt::crc32_tab[] =
   0xb3667a2e,0xc4614ab8,0x5d681b02,0x2a6f2b94,0xb40bbe37,0xc30c8ea1,0x5a05df1b,0x2d02ef8d
 };
 
-//unsigned long BinkpCrypt::keys[]={0};
 Persistent<Function> BinkpCrypt::constructor;
 Persistent<FunctionTemplate> BinkpCrypt::constructor_template;
 
 
 BinkpCrypt::BinkpCrypt(){
 }
+
 void BinkpCrypt::Init(Handle<Object> exports) {
-	// Prepare constructor template
-	Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-	tpl->SetClassName(String::NewSymbol("BinkpCrypt"));
+	NanScope();
+	Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
+	tpl->SetClassName(NanNew("BinkpCrypt"));
 	tpl->InstanceTemplate()->SetInternalFieldCount(1);
-	// Prototype
-	tpl->PrototypeTemplate()->Set(String::NewSymbol("init_keys"),
-		FunctionTemplate::New(init_keys)->GetFunction());
-	tpl->PrototypeTemplate()->Set(String::NewSymbol("decrypt_buf"),
-		FunctionTemplate::New(ndecrypt_buf)->GetFunction());
-	tpl->PrototypeTemplate()->Set(String::NewSymbol("encrypt_buf"),
-		FunctionTemplate::New(nencrypt_buf)->GetFunction());
-	constructor = Persistent<Function>::New(tpl->GetFunction());
-	exports->Set(String::NewSymbol("BinkpCrypt"), constructor);
+	NODE_SET_PROTOTYPE_METHOD(tpl, "init_keys", init_keys);
+	NODE_SET_PROTOTYPE_METHOD(tpl, "decrypt_buf", ndecrypt_buf);
+	NODE_SET_PROTOTYPE_METHOD(tpl, "encrypt_buf", nencrypt_buf);
+
+NanAssignPersistent(constructor, tpl->GetFunction());
+  exports->Set(NanNew("BinkpCrypt"), tpl->GetFunction());
 }
-Handle<Value> BinkpCrypt::New(const Arguments& args) {
-	HandleScope scope;
+
+NAN_METHOD(BinkpCrypt::New) {
+	NanScope();
 	if(!args.IsConstructCall()) {
-//		cout<<"123"<<endl;
-		int len = args.Length();
-		Handle<Value>* newArgs = new Handle<Value>[len];
-		for(int i = 0; i < len; i++) {
-			newArgs[i] = args[i];
-		}
-		Handle<Value> newInst = constructor_template->GetFunction()->NewInstance(len, newArgs);
-		delete[] newArgs;
-		return newInst;
+		const int argc = 1;
+    	Local<Value> argv[argc] = { args[0] };
+    	Local<Function> cons = NanNew<Function>(constructor);
+		NanReturnValue(cons->NewInstance(argc, argv));
 	}
 	BinkpCrypt *bcrypt;
 	bcrypt=new BinkpCrypt();
 	bcrypt->Wrap(args.This());
-	return scope.Close(args.This());
+	NanReturnValue(args.This());
 }
-Handle<Value> BinkpCrypt::init_keys (const Arguments& args) {
-	HandleScope scope;
-	String::AsciiValue pass(args[0]->ToString());
+NAN_METHOD(BinkpCrypt::init_keys) {
+	NanScope();
+	static NanAsciiString pass(args[0]->ToString());
 	char *password=*pass;
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	obj->keys[0] = 305419896L;
@@ -118,8 +111,8 @@ Handle<Value> BinkpCrypt::init_keys (const Arguments& args) {
 		update_keys((int)*password,obj);
 		password++;
 	}
-//	cout <<obj->keys[0];
-	return scope.Close(args.This());
+	NanReturnValue(args.This());
+
 }
 int BinkpCrypt::update_keys(int c,BinkpCrypt *obj)
 {
@@ -139,33 +132,34 @@ int BinkpCrypt::decrypt_byte (BinkpCrypt* obj){
 void BinkpCrypt::decrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt* obj)
 {
   while (bufsize--)
+    {
       update_keys(*buf++ ^= decrypt_byte(obj),obj);
+    }
 }
 void BinkpCrypt::encrypt_buf(char *buf, unsigned int bufsize,BinkpCrypt* obj)
 {
 	int t;
-//	cout <<buf<<endl;
 	while( bufsize-- ) {
 		t = decrypt_byte(obj);
 		update_keys( *buf ,obj);
 		*buf++ ^= t;
 	}
 }
-Handle<Value> BinkpCrypt::nencrypt_buf (const Arguments& args) {
-	HandleScope scope;
+NAN_METHOD(BinkpCrypt::nencrypt_buf) {
+	NanScope();
 	unsigned int len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	char *buf=Buffer::Data(args[0]->ToObject());
 	encrypt_buf (buf,len,obj);
-	return scope.Close(Buffer::New(buf,len)->handle_);
+	NanReturnValue(NanNewBufferHandle(buf,len));
 }
-Handle<Value> BinkpCrypt::ndecrypt_buf (const Arguments& args) {
-	HandleScope scope;
+NAN_METHOD(BinkpCrypt::ndecrypt_buf) {
+	NanScope();
 	unsigned int len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	char *buf=Buffer::Data(args[0]->ToObject());
 	decrypt_buf (buf,len,obj);
-	return scope.Close(Buffer::New(buf,len)->handle_);
+	NanReturnValue(NanNewBufferHandle(buf,len));
 }
 void InitAll(Handle<Object> exports) {
   BinkpCrypt::Init(exports);

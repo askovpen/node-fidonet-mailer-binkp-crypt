@@ -6,6 +6,7 @@
 	"keywords": ["Fidonet", "Fido", "mailer", "binkp", "client", "crypt"],
 	"author": { "name": "Alexander N. Skovpen" },
 	"dependencies": {
+		"nan": ">0.0.0"
 	},
 	"devDependencies": {
 		"gulp": ">0.0.0",
