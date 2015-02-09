@@ -147,7 +147,7 @@ void BinkpCrypt::encrypt_buf(char *buf, unsigned int bufsize,BinkpCrypt* obj)
 }
 NAN_METHOD(BinkpCrypt::nencrypt_buf) {
 	NanScope();
-	unsigned int len=Buffer::Length(args[0]->ToObject());
+	size_t len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	char *buf=Buffer::Data(args[0]->ToObject());
 	encrypt_buf (buf,len,obj);
@@ -155,7 +155,7 @@ NAN_METHOD(BinkpCrypt::nencrypt_buf) {
 }
 NAN_METHOD(BinkpCrypt::ndecrypt_buf) {
 	NanScope();
-	unsigned int len=Buffer::Length(args[0]->ToObject());
+	size_t len=Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	char *buf=Buffer::Data(args[0]->ToObject());
 	decrypt_buf (buf,len,obj);
