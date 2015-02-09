@@ -1,28 +1,37 @@
 #include <node.h>
 #include <node_buffer.h>
-#include <iostream>
+#include <node_version.h>
 #include <node_object_wrap.h>
 
-using namespace v8;
-using namespace node;
-using namespace std;
+#include "compat.h"
+#include "compat-inl.h"
+
+namespace C = ::compat;
+
+using node::ObjectWrap;
+using v8::Function;
+using v8::FunctionTemplate;
+using v8::Handle;
+using v8::Isolate;
+using v8::Local;
+using v8::Object;
+using v8::String;
+using v8::Value;
+
 #define CRC32_CR(c,b)	(crc32_tab[((int)(c) ^ (b)) & 0xff] ^ ((c) >> 8))
-class BinkpCrypt : node::ObjectWrap { 
+class BinkpCrypt : public node::ObjectWrap {
 	public:
 		static void Init(v8::Handle<v8::Object> exports);
-		static Persistent<Function> js_conditioner;
 		BinkpCrypt();
 		static unsigned long crc32_tab[256];
 	protected:
 		unsigned long keys[3];
-		static v8::Handle<v8::Value> init_keys (const v8::Arguments& args);
-//		void init_keys (char* passwd);
-		static v8::Handle<v8::Value> ndecrypt_buf (const v8::Arguments& args);
-		static v8::Handle<v8::Value> nencrypt_buf (const v8::Arguments& args);
-		static v8::Persistent<FunctionTemplate> constructor_template;
-		static v8::Handle<v8::Value> New(const v8::Arguments& args);
+		static C::ReturnType init_keys (const C::ArgumentType& args);
+		static C::ReturnType ndecrypt_buf (const C::ArgumentType& args);
+		static C::ReturnType nencrypt_buf (const C::ArgumentType& args);
+		static C::ReturnType New(const C::ArgumentType& args);
 	private:
-		static v8::Persistent<v8::Function> constructor;
+		static C::Persistent<v8::Function> constructor;
 		static int decrypt_byte(BinkpCrypt *obj);
 		static void decrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt *obj);
 		static void encrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt *obj);
@@ -66,48 +75,47 @@ unsigned long BinkpCrypt::crc32_tab[] =
 };
 
 //unsigned long BinkpCrypt::keys[]={0};
-Persistent<Function> BinkpCrypt::constructor;
-Persistent<FunctionTemplate> BinkpCrypt::constructor_template;
+C::Persistent<Function> BinkpCrypt::constructor;
 
 
 BinkpCrypt::BinkpCrypt(){
 }
 void BinkpCrypt::Init(Handle<Object> exports) {
+	Isolate* isolate = Isolate::GetCurrent();
 	// Prepare constructor template
-	Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-	tpl->SetClassName(String::NewSymbol("BinkpCrypt"));
+	Local<FunctionTemplate> tpl = C::FunctionTemplate::New(isolate, New);
+	tpl->SetClassName(C::String::NewFromUtf8(isolate, "BinkpCrypt"));
 	tpl->InstanceTemplate()->SetInternalFieldCount(1);
 	// Prototype
-	tpl->PrototypeTemplate()->Set(String::NewSymbol("init_keys"),
-		FunctionTemplate::New(init_keys)->GetFunction());
-	tpl->PrototypeTemplate()->Set(String::NewSymbol("decrypt_buf"),
-		FunctionTemplate::New(ndecrypt_buf)->GetFunction());
-	tpl->PrototypeTemplate()->Set(String::NewSymbol("encrypt_buf"),
-		FunctionTemplate::New(nencrypt_buf)->GetFunction());
-	constructor = Persistent<Function>::New(tpl->GetFunction());
-	exports->Set(String::NewSymbol("BinkpCrypt"), constructor);
+	tpl->PrototypeTemplate()->Set(C::String::NewFromUtf8(isolate, "init_keys"),
+		C::FunctionTemplate::New(isolate, init_keys)->GetFunction());
+	tpl->PrototypeTemplate()->Set(C::String::NewFromUtf8(isolate, "decrypt_buf"),
+		C::FunctionTemplate::New(isolate, ndecrypt_buf)->GetFunction());
+	tpl->PrototypeTemplate()->Set(C::String::NewFromUtf8(isolate, "encrypt_buf"),
+		C::FunctionTemplate::New(isolate, nencrypt_buf)->GetFunction());
+	constructor.Reset(isolate, tpl->GetFunction());
+	exports->Set(C::String::NewFromUtf8(isolate, "BinkpCrypt"), tpl->GetFunction());
 }
-Handle<Value> BinkpCrypt::New(const Arguments& args) {
-	HandleScope scope;
+C::ReturnType BinkpCrypt::New(const C::ArgumentType& args) {
+	C::ReturnableHandleScope scope(args);
 	if(!args.IsConstructCall()) {
-//		cout<<"123"<<endl;
 		int len = args.Length();
 		Handle<Value>* newArgs = new Handle<Value>[len];
 		for(int i = 0; i < len; i++) {
 			newArgs[i] = args[i];
 		}
-		Handle<Value> newInst = constructor_template->GetFunction()->NewInstance(len, newArgs);
+		Local<Value> newInst = constructor.ToLocal(args.GetIsolate())->NewInstance(len, newArgs);
 		delete[] newArgs;
-		return newInst;
+		return scope.Return(newInst);
 	}
 	BinkpCrypt *bcrypt;
 	bcrypt=new BinkpCrypt();
 	bcrypt->Wrap(args.This());
-	return scope.Close(args.This());
+	return scope.Return(args.This());
 }
-Handle<Value> BinkpCrypt::init_keys (const Arguments& args) {
-	HandleScope scope;
-	String::AsciiValue pass(args[0]->ToString());
+C::ReturnType BinkpCrypt::init_keys(const C::ArgumentType& args) {
+	C::ReturnableHandleScope scope(args);
+	String::Utf8Value pass(args[0]->ToString());
 	char *password=*pass;
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
 	obj->keys[0] = 305419896L;
@@ -118,8 +126,7 @@ Handle<Value> BinkpCrypt::init_keys (const Arguments& args) {
 		update_keys((int)*password,obj);
 		password++;
 	}
-//	cout <<obj->keys[0];
-	return scope.Close(args.This());
+	return scope.Return(args.This());
 }
 int BinkpCrypt::update_keys(int c,BinkpCrypt *obj)
 {
@@ -144,28 +151,35 @@ void BinkpCrypt::decrypt_buf (char *buf, unsigned int bufsize,BinkpCrypt* obj)
 void BinkpCrypt::encrypt_buf(char *buf, unsigned int bufsize,BinkpCrypt* obj)
 {
 	int t;
-//	cout <<buf<<endl;
 	while( bufsize-- ) {
 		t = decrypt_byte(obj);
 		update_keys( *buf ,obj);
 		*buf++ ^= t;
 	}
 }
-Handle<Value> BinkpCrypt::nencrypt_buf (const Arguments& args) {
-	HandleScope scope;
-	unsigned int len=Buffer::Length(args[0]->ToObject());
+C::ReturnType BinkpCrypt::nencrypt_buf(const C::ArgumentType& args) {
+	C::ReturnableHandleScope scope(args);
+	unsigned int len=node::Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
-	char *buf=Buffer::Data(args[0]->ToObject());
+	char *buf=node::Buffer::Data(args[0]->ToObject());
 	encrypt_buf (buf,len,obj);
-	return scope.Close(Buffer::New(buf,len)->handle_);
+#if NODE_VERSION_AT_LEAST(0, 11, 0)
+	return scope.Return(node::Buffer::New(buf,len));
+#else
+	return scope.Return(node::Buffer::New(buf,len)->handle_);
+#endif
 }
-Handle<Value> BinkpCrypt::ndecrypt_buf (const Arguments& args) {
-	HandleScope scope;
-	unsigned int len=Buffer::Length(args[0]->ToObject());
+C::ReturnType BinkpCrypt::ndecrypt_buf (const C::ArgumentType& args) {
+	C::ReturnableHandleScope scope(args);
+	unsigned int len=node::Buffer::Length(args[0]->ToObject());
 	BinkpCrypt* obj = ObjectWrap::Unwrap<BinkpCrypt>(args.This());
-	char *buf=Buffer::Data(args[0]->ToObject());
+	char *buf=node::Buffer::Data(args[0]->ToObject());
 	decrypt_buf (buf,len,obj);
-	return scope.Close(Buffer::New(buf,len)->handle_);
+#if NODE_VERSION_AT_LEAST(0, 11, 0)
+	return scope.Return(node::Buffer::New(buf,len));
+#else
+	return scope.Return(node::Buffer::New(buf,len)->handle_);
+#endif
 }
 void InitAll(Handle<Object> exports) {
   BinkpCrypt::Init(exports);

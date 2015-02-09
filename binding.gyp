@@ -2,7 +2,11 @@
   'targets': [
     {
       'target_name': 'crypt',
-      'sources': [ 'crypt.cc' ],
+      'sources': [
+        'compat-inl.h',
+        'compat.h',
+        'crypt.cc',
+      ],
       'conditions': [
       ]
     }
