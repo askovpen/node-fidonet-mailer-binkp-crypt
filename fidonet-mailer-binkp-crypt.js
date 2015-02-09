@@ -1,4 +1,4 @@
-var bcrypt=require('./build/Release/crypt');
+var bcrypt=require('bindings')('crypt');
 
 var crypt=function(password) {
 	if (!(this instanceof crypt)) return new crypt(password);
