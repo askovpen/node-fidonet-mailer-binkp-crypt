@@ -6,7 +6,7 @@
     "keywords": ["Fidonet", "Fido", "mailer","binkp"],
     "author": { "name": "Alexander N. Skovpen" },
     "dependencies": {
-        "nan": ">0.0.0",
+        "nan": "~1.9.0",
         "bindings": ">0.0.0"
     },
     "devDependencies": {
